@@ -1,0 +1,116 @@
+email 1:
+From: David Welch <David.E.Welch@state.or.us>
+Sent: Monday, April 5, 2021 9:21 AM
+To: Michael Gray <Michael.E.Gray@state.or.us>; Stahl, Tom <thomas.stahl@state.or.us>
+Cc: Lorion, Chris M <chris.m.lorion@state.or.us>; Marc A Johnson <Marc.A.Johnson@state.or.us>
+Subject: RE: 4421 & 14421 StW
+ 
+[This email originated from outside of OSU. Use caution with links and attachments.]
+We will go ahead and spawn them, keep the groups separate, possibly up to marking which starts around the first of October. This will help to reach our goal for production needs to include these.
+ 
+David E. Welch
+Manager
+Oregon Dept of Fish & Wildlife
+Bandon Fish Hatchery
+55212 Fish Hatchery Rd.
+
+##################################################
+email 2:
+
+From: Johnson, Marc <Marc.Johnson@oregonstate.edu>
+Sent: Monday, April 5, 2021 3:29 PM
+To: Stahl, Tom <thomas.stahl@state.or.us>
+Cc: Lorion, Chris M <chris.m.lorion@state.or.us>
+Subject: FW: 4421 & 14421 StW
+ 
+Hi Tom,
+ 
+Did you want to discuss? 
+ 
+There certainly shouldn’t be any concern about the immediate approach David suggests – spawning them separately.
+ 
+Furthermore, I don’t believe there should be any real concern about combining these stocks within basin.
+ 
+This is not the same as bringing in an out-of-basin stock, and any conflation could be easily identified.
+ 
+-Marc
+
+##############################################################
+email 3:
+From: Thomas Stahl <Thomas.Stahl@state.or.us>
+Sent: Monday, April 5, 2021 4:10 PM
+To: Johnson, Marc <Marc.Johnson@oregonstate.edu>
+Cc: Lorion, Chris M <chris.m.lorion@state.or.us>
+Subject: RE: 4421 & 14421 StW
+ 
+[This email originated from outside of OSU. Use caution with links and attachments.]
+Thanks Marc. 
+ 
+The only concern I see with moving forward with spawning is, absent an answer to #2, that the expectation would be that the SF fish actually get stocked in the NF and, if we subsequently decide not to inter-mix, we would need to cull/kill (which could present some public perception issues, unless we put them in a pond for fishing).  A lot of ifs, but stranger things have happened.
+ 
+R.e. #2, I agree that these stock boundaries (sub-basin) are finer than we usually utilize (basin), but could there be some genetic differences?  Where should we ideally draw hatchery stock lines – based on: watershed scale (i.e., basin), some genetic measure of the wild population (if integrated), logistics/access to fish?  Haven’t there been studies recently showing genetic differences within river systems for wild fish?
+ 
+For #1 (prior to some decision on #2), would stocking the SF fish in the NF on a one time basis present genetic risk, assuming there was some level of genetic difference?
+
+#################################################################################
+email 4:
+ 
+From: Johnson, Marc <Marc.Johnson@oregonstate.edu>
+Sent: Monday, April 5, 2021 6:23 PM
+To: O Malley, Kathleen G <Kathleen.OMalley@oregonstate.edu>
+Subject: RE: Winter steelhead genetic samples from the Coquille
+ 
+ 
+My current 2 cents…
+ 
+Forwarded….
+ 
+ 
+ 
+Hi Tom,
+ 
+Agreed, the scenario you describe would be far from ideal.
+ 
+As we often have, this is a question of risk v. reward. 
+ 
+The reward would be to meet production goals for fishery augmentation.  Simple enough.
+ 
+The potential risk to be considered here is that of genetic introgression between fish from different tributaries of the same river.  While we have established that we’re not comfortable with combining stocks from different tributaries of major large rivers, like the Columbia or even Willamette, the Coquille is a relatively small coastal system.  Steelhead from the two forks like would exhibit genetic difference, and that genetic difference might even prove significant (depends in part upon how many markers are used – think about identical twins: they appear “same” if only a few characters are considered, but different if more characters are considered).  But, relevant here is whether those differences are likely maintained over time, given natural stray rates within the basin.  Typically, genetic differences among populations at this scale are ephemeral.  Certainly, the effects of a single year of mixing would be short-lived, as selection can be expected to re-establish meaningful genetic structure if it exists within the basin.
+ 
+You raise a number of other questions that underscore the importance of context – and why management should consider a suite of factors (stock source, basin size, etc.) when delineating management units.
+ 
+Marc A. Johnson, Ph.D.
+Acting Director to Oregon Hatchery Research Center
+Liaison to State Fisheries Geneticist
+ 
+Cell: 541-224-4063
+ 
+Oregon Fish Conservation and Recovery
+Oregon Department of Fish and Wildlife
+4034 Fairview Industrial Dr SE
+Salem, OR 97302
+ 
+ 
+ 
+####### different thread 
+
+Kathleen,
+ 
+In 2016 I collected 50 hatchery and wild steelhead genetic samples from the South Fork Coquille and 41 hatchery and wild genetic samples from the North Fork Coquille.
+The South Fork Coquille vials were labeled “144 StW ###” and the North Fork vials were labeled “44 StW ###”.
+ 
+At the time I gave the samples to Kevin Goodson and he was going to get them to Marc Johnson, when he was filling in at the genetics lab.  Do you know if the samples are at the genetics lab?
+I’ve included a copy of the data sheet.
+ 
+ 
+The South Fork and North Fork Coquille hatchery steelhead have been treated as 2 separate stocks since sometime in the 1990s or maybe earlier.  The decision was made based on geology.  And over the years there has been lots of discussion if we should keep the stocks separate or combine them.  I took genetic samples in case we had funds to run some genetic analysis. 
+ 
+ 
+ 
+Gary Vonderohe
+Assistant District Fish Bio
+Oregon Dept of Fish & Wildlife
+Charleston Field Office
+Phone: 541-857-2392
+Cell: 541-751-5518
+ 
