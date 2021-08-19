@@ -61,16 +61,24 @@ kable(meta_data %>%
   group_by(pop, Date) %>%
   summarise(n = n()) )
 
+kable(meta_data %>%
+  group_by(pop, `Adult/Juv`) %>%
+  summarise(n = n()) )
+
 rm(sheet1)
 rm(sheet2)
 ```
 
-After filtering the GTseq dataset for genotype quality 71 individuals genotyped at 348 markers remained. Full details of the genotype calling and filtering is available in [the notebook here](https://github.com/david-dayan/coquille_river_2021/blob/main/coquille_genotyping_notebook.html). Summary information is below. 
+After filtering the GTseq dataset for genotype quality 71 individuals genotyped at 348 markers remained. Full details of the genotype calling and filtering is available in [the notebook here](https://rpubs.com/david_Dayan/800098). This information is also available in the project github repository. Summary information is below. 
 
 ```{r, message=FALSE, warning=FALSE}
 
 load("genotype_data/genind_2.0.R")
 load("genotype_data/genotypes_2.2.R")
+
+genos_2.2 %<>%
+  left_join(select(meta_data, `Adult/Juv`, `SFGL Id`), by = c("sample" = "SFGL Id")) %>%
+  relocate(sample, `Adult/Juv`)
 
 kable(genos_2.2 %>%
   group_by(pop, `Hat/Wild`) %>%
@@ -80,8 +88,20 @@ kable(genos_2.2 %>%
   group_by(pop, Date) %>%
   summarise(n = n()) )
 
+kable(genos_2.2 %>%
+  group_by(pop, `Adult/Juv`) %>%
+  summarise(n = n()) )
+
 ```
 
+__Lost samples__
+An unusually large number of individuals failed genotyping. Metadata from these failed individuals is below. Most (15 of 20) were filtered because of very low on-target read depth. Three additional individuals were filtered due to moderately poor read depth/genotyping success rate and two were removed because of possible contamination. Filtered individuals were not enriched for a particular metadata variable (e.g. all of the filtered individuals were not adult hatchery samples or juvenile NFCQ YoY). Further details also available in genotyping log. 
+
+```{r}
+kable(meta_data %>%
+  filter(!(`SFGL Id` %in% genos_2.2$sample)) %>%
+  select(-c(Pedigree, `Vial #`)))
+```
 
 # PCA 
 
@@ -359,15 +379,39 @@ sf_heat <- pheatmap::pheatmap(pac_sf[,-c(14,15)], cluster_cols  = FALSE, show_ro
 
 ```
 
-At run timing markers there appear to be two major clusters. These cluster were driven by the first three SNPs in the genomic region (Chr28_11607954, Omy_RAD52456-17 and Omy_GREB1_05). While all SNPs annotated as run-timing marker SNPs have demonstrated an association with this phenotype in some populations, in the nearby Rogue River, we have demonstrated that two of these SNPs are not diagnostic of run timing. The third (Omy_RAD52456-17) was not analyzed in that study. This suggests that genomic variation WITHIN our North and South Fork Coquille steelhead samples is unlikely to have a large phenotype effect and all samples are likely of the same run type.  
 
-Interestingly, a small number of samples demonstrate heterozygous genotypes at a large number of run-timing alleles, suggesting that there is some gene flow between summer and winter steelhead in this river.
+At run timing markers there appear to be two major clusters. These clusters were driven by the first three SNPs in the genomic region (Chr28_11607954, Omy_RAD52456-17 and Omy_GREB1_05). While all SNPs annotated as run-timing marker SNPs have demonstrated an association with this phenotype in some populations, in the nearby Rogue River, we have demonstrated that two of these SNPs are not diagnostic of run timing. The third (Omy_RAD52456-17) was not analyzed in that study. This suggests that genomic variation within our North and South Fork Coquille steelhead samples between these two clusters is unlikely to have a large phenotype effect. Similarly, there is high genetic diversity (heterozygosity) at a marker at the 3' border of this region (Chr28_11773194), but this marker is not diagnostic of run timing in the Rogue River. 
+
+Ignoring the first three and last marker, we also observed some genetic variation at other markers known to have a strong association with run-timing in the nearby Rogue River. Some individuals demonstrate a large number of minor alleles compared to our expectations given that all individuals are winter run.  
+In both the NF and SF Coquille, a few individuals were heterozygous at many adult run timing markers. This result suggests that these individuals have one copy of the “early” run allele. In the NF Coquille, two individuals were homozygous at one run timing marker suggesting that they have two copies of the “early” run allele. While we can not predict the phenotypic effect of this variation, it suggests Coquille winter run steelhead harbor some early-migration associated alleles.
+
+Below we gather the metadata for individuals with many copies of proposed "early" alleles.
+```{r}
+#rowSums(pac_nf[,4:12]) < 15
+#pac_nf[rowSums(pac_nf[,4:12], na.rm = TRUE) < 15,14]
+
+min_allele <- pac_nf %>%
+  bind_rows(pac_sf) %>%
+  select(-c(pop,"Chr28_11607954",  "Omy_RAD52458-17", "Omy_GREB1_05", "Chr28_11773194" )) %>% 
+  rowwise(sample) %>%
+  mutate(min_allele_ct = sum(c_across(cols = everything())=="1", na.rm = TRUE) + 2*sum(c_across(cols = everything())=="0", na.rm = TRUE)) %>%
+  select(sample, min_allele_ct) %>%
+  filter(min_allele_ct > 3) %>%
+  left_join(meta_data, by = c("sample" = "SFGL Id"))
+
+#ggplot(data = min_allele)+geom_histogram(aes(x = min_allele_ct))
+
+kable(min_allele, caption = "metadata from samples with more than 3 minor alleles")
+
+```
+
 
 # Summary
 
 __Differentiation__
-We examined genetic variation at 348 genetic markers among 34 North Fork and 37 South Fork Coquille River Steelhead. Overall F~ST~ was very low and PCA did not reveal any clear structure to the data. Using a dsicriminant analysis of principal components, we observed very subtle structure driven by a mix of neutral and putatively adaptive markers, but the genetic structure observed at these markers was insufficient to fully discriminate between the two groups.  
+We examined genetic variation at 348 genetic markers among 34 North Fork and 37 South Fork Coquille River Steelhead. Overall F~ST~ was very low and PCA did not reveal any clear structure to the data. Using a discriminant analysis of principal components, we observed very subtle structure driven by a mix of neutral and putatively adaptive markers. The genetic structure observed at these markers was insufficient to fully discriminate between the two groups, however cross validation suggests that individuals could be successful assigned to their source population using genetic information with 79% accuracy.  
 These results suggest there are no strong genetic differences between our North and South Fork samples. However, our GTseq panel only provides a small snapshot of the genetic variation within and among these groups and other potentially ecologically relevant genetic differences between these groups may exist. 
 
 __Run timing markers__
-There was little variation among run-timing associated markers within or between our samples with one exception. Three markers showed higher genetic diversity than the others, and appear to be linked. These markers are on the 5' border of the genomic region associated with run-timing and two of three have been observed to have low correlation with run-timing phenotypes in the nearby Rogue River.   
+There was limited variation among run-timing associated markers within or between our samples. Four markers showed higher genetic diversity than the others. These markers flank the genomic region associated with run-timing and three of the four have been observed to have low correlation with run-timing phenotypes in the nearby Rogue River.  
+We also observed some genetic variation at other markers in the genomic region known to have an association with run-timing in the nearby Rogue River. A small number individuals carry many minor alleles compared to our expectations given that all individuals are winter run. This suggests early-run alleles may be found among Coquille River winter steelhead, but the phenotypic impact of these alleles is not known. 

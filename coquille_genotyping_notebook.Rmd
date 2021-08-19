@@ -46,9 +46,10 @@ __fastqc__
 
 Fastqc report for merged demulitplexed from this project available in repo under genotype_data directory  
 
-Everything looked pretty typical for a GTseq run
-Raw reads: XXXXX
-Q: XXXXXx 
+Everything looked pretty typical for a GTseq run, perhaps a little high on adapter
+Raw reads: 	37178964
+Q: >34 until base 60
+Adapter Sequence: Zero until base 20, then gradual increase up to 40% by base 40.
 
 
 
