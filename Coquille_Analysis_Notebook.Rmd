@@ -31,7 +31,7 @@ To conduct a similar analyses on your computer, edit or run code: clone this rep
 
 # Rationale / Brief Methods
 
-The goal of this notebook is to assess if any genetic structure/differentiation can be observed between North and South Fork Coquille River _O. mykiss_ 
+The goal of this notebook is to assess if any genetic structure/differentiation can be observed between hatchery and wild stocks of North and South Fork Coquille River _O. mykiss_ using a genetic panel of 391 SNPs.
 
 We conduct several brief analyses:
 
@@ -44,6 +44,7 @@ We conduct several brief analyses:
 
 91 individuals were genotyped at 391 GTseq genetic markers including presumably neutral and putatively adaptive genetic markers. Sample sizes and summary metadata for the the unfiltered data is below. All samples are described at winter steelhead
 
+__Unfiltered Sample Metadata__
 ```{r, message=FALSE, warning=FALSE}
 sheet1 <- readxl::read_xlsx("metadata/GT-seq_GC3F-CKF-005_metadata.xlsx", sheet = 1)
 sheet2 <- readxl::read_xlsx("metadata/GT-seq_GC3F-CKF-005_metadata.xlsx", sheet = 2)
@@ -69,7 +70,8 @@ rm(sheet1)
 rm(sheet2)
 ```
 
-After filtering the GTseq dataset for genotype quality 71 individuals genotyped at 348 markers remained. Full details of the genotype calling and filtering is available in [the notebook here](https://rpubs.com/david_Dayan/800098). This information is also available in the project github repository. Summary information is below. 
+__Filtered Dataset__  
+After filtering the GTseq dataset for genotype quality 71 individuals genotyped at 347 markers remained. Full details of the genotype calling and filtering is available in [the notebook here](https://rpubs.com/david_Dayan/800098). This information is also available in the project github repository. Summary information is below. 
 
 ```{r, message=FALSE, warning=FALSE}
 
@@ -94,7 +96,7 @@ kable(genos_2.2 %>%
 
 ```
 
-__Lost samples__
+__Failed samples__  
 An unusually large number of individuals failed genotyping. Metadata from these failed individuals is below. Most (15 of 20) were filtered because of very low on-target read depth. Three additional individuals were filtered due to moderately poor read depth/genotyping success rate and two were removed because of possible contamination. Filtered individuals were not enriched for a particular metadata variable (e.g. all of the filtered individuals were not adult hatchery samples or juvenile NFCQ YoY). Further details also available in genotyping log. 
 
 ```{r}
@@ -103,11 +105,12 @@ kable(meta_data %>%
   select(-c(Pedigree, `Vial #`)))
 ```
 
+
 # PCA 
 
-First, we conduct a principal component analysis.
+Our first examination of potential genetic structure among the individuals is a principal component analysis.
 
-The first step is to assess the number of PCs to retain in the analysis. We will do this using the Kaiser Guttman criterion (below) and a broken stick model (below)
+The first step is to assess the number of PCs to retain in the analysis. We do this using the Kaiser Guttman criterion (below) and a broken stick model (below)
 ```{r, message=FALSE, warning=FALSE}
 # set missing data to mean allele freq (PCA does not accomodate NAs)
 X <- scaleGen(genind_2.0,  NA.method="mean")
@@ -149,12 +152,11 @@ ggplot(data = pca_eigs_to_plot[1:71,])+geom_bar(aes(x = as.factor(row_n), y = pe
 
 ```
 
-The Kaiser-Guttman criterion suggests retaining variation at the first 30 PCs, while the broken stick model suggests no PCs are relevant. 
+The Kaiser-Guttman criterion (liberal) suggests retaining variation at the first 30 PCs, while the broken stick model (conservative) suggests no PCs are relevant. 
 
 ## PCA Results
 
-We plot the first 4 PC axes below according to population and hatchery 
-_vs._ natural origin (HOR/NOR)
+We plot the first 4 PC axes below according to population (North vs South Fork) and origin (hatchery _vs._ natural origin/wild) and their interaction. 
 
 __North vs South Fork__  
 ```{r, warning = FALSE, message=FALSE}
@@ -178,7 +180,7 @@ plotly::plot_ly(x=snp_pcs$Axis1, y=snp_pcs$Axis2, z=snp_pcs$Axis3, type="scatter
 There is no apparent genetic structure in principal component space between North and South Fork samples. 
 
 __HOR _vs_ NOR__  
-Now lets's also add HOR/NOR status
+Now let's compare all wild (NOR) to all hatchery origin (HOR) individuals.
 ```{r, message=FALSE, warning=FALSE}
 
 ggplot(data = snp_pcs)+geom_point(aes(Axis1, Axis2, color = `Hat/Wild`)) + stat_ellipse(aes(Axis1, Axis2, color = `Hat/Wild`)) +theme_classic()+scale_color_viridis_d(name = "HOR or NOR", begin = 0.2, end = 0.8)
@@ -191,12 +193,33 @@ plotly::plot_ly(x=snp_pcs$Axis1, y=snp_pcs$Axis2, z=snp_pcs$Axis3, type="scatter
 
 Also no apparent structure in PC space between hatchery and wild. 
 
-# DAPC
+__Full Interaction (Origin * Fork)__
 
-## Set Up
-Sometimes PCA will fail to find structure when both FST and the number of markers is low. Next we will attempt find a combination of alleles in the dataset that maximizes differences between North and South Fork samples using discriminant analysis of principal components (DAPC)
+Let's also examine each stock separately. This will allow us to examine potential structure between North Fork Hatchery and South Fork wild stocks, for example
+```{r, message=FALSE, warning=FALSE}
 
-First we need to asses the correct number of PCs to retain in the DAPC, including too many can lead to overfitting and observation of among-group differences that are unlikely to be biologically meaningful. Below we use cross validation and the a.score approach to find the optimum number of PCs while avoiding overfitting.
+ggplot(data = snp_pcs)+geom_point(aes(Axis1, Axis2, color = interaction(`Hat/Wild`,pop))) + stat_ellipse(aes(Axis1, Axis2, color = interaction(`Hat/Wild`,pop))) +theme_classic()+scale_color_viridis_d(name = "HOR or NOR\nand North or South Fork")
+
+ggplot(data = snp_pcs)+geom_point(aes(Axis3, Axis4, color = interaction(`Hat/Wild`,pop))) + stat_ellipse(aes(Axis3, Axis4, color = interaction(`Hat/Wild`,pop))) +theme_classic()+scale_color_viridis_d(name = "HOR or NOR\nand North or South Fork")
+
+
+#3d plot as well
+plotly::plot_ly(x=snp_pcs$Axis1, y=snp_pcs$Axis2, z=snp_pcs$Axis3, type="scatter3d", mode="markers", color=interaction(snp_pcs$`Hat/Wild`, snp_pcs$pop), alpha = 0.8, colors = viridis::viridis(4, begin = 0, end = 1))
+```
+
+Substantial overlap in PC space for this comparison as well. However, there may be a very subtle difference in group centroids between hatchery North Fork samples and all others. Examination with DAPC and F~ST~ should better characterize the scale of this potential difference.
+
+# DAPC 
+
+PCA will fail to find structure when both F~ST~ and the number of markers is low. Next we will attempt find a combination of alleles in the dataset that maximizes differences between groups of individuals using discriminant analysis of principal components (DAPC). 
+
+## North vs South Fork
+
+First, we'll combine hatchery and wild samples within each fork to look for structure within the basin. This assumes HOR/NOR differences are limited within a fork (we'll investigate this second possibility later).
+
+### Set Up
+
+First we need to assess the correct number of PCs to retain in the DAPC, including too many can lead to overfitting and observation of among-group differences that are unlikely to be biologically meaningful. Below we use cross validation and the a.score approach to find the optimum number of PCs while avoiding overfitting.
 ```{r, eval = FALSE, cache = TRUE, warning = FALSE, message=FALSE}
 # run this interactively to find the optimum number of PCs without overfitting
 
@@ -205,37 +228,34 @@ dapc_full <- dapc(genind_2.0, n.pca = 71, n.da = 1)
 
 mat <- as.matrix(scaleGen(genind_2.0, NA.method="mean", scale=FALSE, center=FALSE))
 xpop <- pop(genind_2.0)
-xval <- xvalDapc(mat, xpop, n.pca.max = 71, training.set = 0.9, result = "overall", center = TRUE, scale = FALSE, n.pca = seq(1,71, length.out = 71), n.rep = 50, xval.plot = TRUE)
+xval <- xvalDapc(mat, xpop, n.pca.max = 71, training.set = 0.9, result = "overall", center = TRUE, scale = FALSE, n.pca = seq(1,71, length.out = 71), n.rep = 500, xval.plot = TRUE)
 
-# 19 was the best number of PCs achieving the lowest MSE / highest proportion of successful assignment 
+# 22 was the best number of PCs achieving the lowest MSE / highest proportion of successful assignment 
 
 
-# now lets see what the a.score has to say
-optim.a.score(dapc_full, smart = FALSE )
-#optim a score says 18
 
-# we will use the lowest value in the final DAPC to avoid overfitting, here 18 pcs
+# we will use the lowest value in the final DAPC to avoid overfitting, here 17 pcs
 ```
 
-Cross validation using 50 replicates of 90%:10% training:test datasets found 21 PCs to achieve the lowest error rate, successfully assigning 79% of samples in the test set to the correct source population. The best number of pcas according to the a.score procedure was 18. We will use the lower value from these two tests to conservatively avoid overfitting.
+Cross validation using 500 replicates of 90%:10% training:test datasets found 19 PCs to achieve the lowest  mean square error rate (28.8%) and highest correct assignment rate, successfully assigning 75.6% of samples in the test set to the correct source population. The median, 2.5% and 97.5% confidence intervals for random permutation of the data was 49%, 41% and 60% respectively, suggesting that this assignment power is much greater than expected by chance alone.
 
-## Results
+### Results
 
-Below we show the results of the DAPC with 18 PCs  
+Below we show the results of the DAPC with 19 PCs  
 
 __DAPC Figure__
 ```{r}
-dapc_18 <- dapc(genind_2.0, n.pca = 18, n.da =1)
+dapc_19 <- dapc(genind_2.0, n.pca = 19, n.da =1)
 
 
-plot_data <- as.data.frame(dapc_18$ind.coord)
+plot_data <- as.data.frame(dapc_19$ind.coord)
 plot_data$pop <- as.character(genind_2.0$pop)
 
 ggplot(data=plot_data)+geom_density(aes(x=LD1, color = pop, fill = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North or South Fork")+scale_fill_viridis_d(name = "North or South Fork")
 
 ```
 
-The density plot above demonstrates that using 18 principal components derived from 348 genetic markers we can identify subtle structure between North and South Fork samples. Note that while there is a difference in the mean value of the discriminant axis for each population, there is substantial overlap. This incomplete discrimination suggests subtle structure.
+The density plot above demonstrates that using 19 principal components derived from 347 genetic markers we can identify subtle structure between North and South Fork samples. Note that while there is a difference in the mean value of the discriminant axis for each population, there is substantial overlap. This incomplete discrimination suggests subtle structure.
 
 __Variable Loadings__  
 Which markers contribute to this structure and are they enriched for a particular annotation?
@@ -243,7 +263,7 @@ Which markers contribute to this structure and are they enriched for a particula
 The plot and table below shows variable loadings (contribution to the first discriminant axis for each allele).
 ```{r, warning=FALSE, message=FALSE}
 #get variable loadings
-marker_loadings1 <- loadingplot(dapc_18$var.contr, axis=1,thres=.007, lab.jitter=1, main = "loading plot for DA 1", )
+marker_loadings1 <- loadingplot(dapc_19$var.contr, axis=1,thres=.006, lab.jitter=1, main = "loading plot for DA 1", )
 markers1 <- unique(substr(names(marker_loadings1$var.values),1,nchar(names(marker_loadings1$var.values))-2))
 
 #get marker annotations
@@ -267,10 +287,142 @@ mls <- as.data.frame(marker_loadings1$var.values) %>%
 kable(mls)
 ```
 
-These results suggest that the subtle structure we observe among samples is driven a mix of neutral and putatively adaptive genetic markers spread throughout the genome. The markers above represent the top 17 markers that load onto this disciminant axis and explain 70% of the variation captured by it.
+These results suggest that the subtle structure we observe among samples is driven a mix of neutral and putatively adaptive genetic markers spread throughout the genome. The markers above represent the top 22 markers that load onto this disciminant axis and explain 42% of the variation captured by it.
+
+## Full Interaction
+
+Next we'll do the full DAPC of population:origin (compare all four possible groupings - NOR North Fork, HOR North Fork, NOR South Fork, HOR South Fork)
+
+### Setup
+
+```{r}
+#set new "populations" in new genind object
+pops <- data.frame(row.names(genind_2.0$tab))
+pops %<>%
+  rename(sample="row.names.genind_2.0.tab.") %>%
+  left_join(meta_data, by = c("sample" = "SFGL Id")) %>%
+  mutate(int = interaction(`Hat/Wild`, pop))
+
+genind_int <- genind_2.0
+genind_int$pop <- pops$int
+
+#    
+```
+
+```{r, eval = FALSE, cache = TRUE, warning = FALSE, message=FALSE}
+# next do the xval and a.score procedure 
+# run this interactively to find the optimum number of PCs without overfitting
+
+# first fit a DAPC and create the other dataframe needed to run a cross validation
+dapc_full <- dapc(genind_int, n.pca = 71, n.da = 3)
+
+mat <- as.matrix(scaleGen(genind_int, NA.method="mean", scale=FALSE, center=FALSE))
+xpop <- pop(genind_int)
+xval <- xvalDapc(mat, xpop, n.pca.max = 71, training.set = 0.9, result = "overall", center = TRUE, scale = FALSE, n.pca = seq(1,71, length.out = 71), n.rep = 500, xval.plot = TRUE)
+
+# 13 was the best number of PCs achieving the lowest MSE / highest proportion of successful assignment 
+
+
+# we will use the lowest value in the final DAPC to avoid overfitting, here 12 pcs
+```
+
+Here, cross validation found that DAPC built on a training dataset could successfully assign a novel test sample back to one of four source populations 61% of the time when using the best number of PCs according to successful assignment rate or lowest mean square error, 22. The median, 2.5% and 97.5% confidence intervals for random permutation of the data was 25%, 16% and 36% respectively, suggesting that this assignment power is much greater than expected by chance alone.
+
+### Results
+
+Below we show the results of the DAPC with 12 PCs  
+
+__DAPC Figure__
+```{r}
+dapc_int <- dapc(genind_int, n.pca = 22, n.da =3)
+
+
+plot_data <- as.data.frame(dapc_int$ind.coord)
+plot_data$pop <- as.character(genind_int$pop)
+
+ggplot(data=plot_data)+geom_point(aes(x=LD1, y = LD2, color = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North vs South Fork\nand HOR vs NOR")+stat_ellipse(aes(x=LD1, y = LD2, color = pop))
+
+ggplot(data=plot_data)+geom_point(aes(x=LD1, y = LD3, color = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North vs South Fork\nand HOR vs NOR")+stat_ellipse(aes(x=LD1, y = LD3, color = pop))
+
+ggplot(data=plot_data)+geom_density(aes(x=LD1, color = pop, fill = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North or South Fork and HOR vs NOR")+scale_fill_viridis_d(name = "North or South Fork and HOR vs NOR")
+
+ggplot(data=plot_data)+geom_density(aes(x=LD2, color = pop, fill = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North or South Fork and HOR vs NOR")+scale_fill_viridis_d(name = "North or South Fork and HOR vs NOR")
+
+ggplot(data=plot_data)+geom_density(aes(x=LD3, color = pop, fill = pop), alpha = 0.5)+theme_classic()+scale_color_viridis_d(name = "North or South Fork and HOR vs NOR")+scale_fill_viridis_d(name = "North or South Fork and HOR vs NOR")
+
+temp <- summary(dapc_int)$assign.per.pop*100
+par(mar=c(4.5,7.5,1,1))
+barplot(temp, xlab="% of reassignment to group", horiz=TRUE, las=1)
+
+```
+
+The figures above demonstrate that there is structure among the four groups. 54% of variation in the dataset is constrained by the three discriminant axes with 51%, 34%, and 15% constrained by the first second and third discriminant axes (LDs).   
+
+The first discriminant axis (LD1) strongly separates the North Fork Hatchery stock from all other groups. The second discriminant axis (LD2) largely separates the South Fork Hatchery stock from all others groups, but discrimination along this axis is not complete suggesting more subtle structure. Finally LD3 separates Wild North and Wild South Fork samples, with the hatchery stocks intermediate, but again, the structure revealed by this genetic axis is very subtle.
+
+Reassignment rates are somewhat inflated compared to cross-validated results, but this makes sense considering that the training dataset is larger when not leaving out individuals for the test dataset, and overfitting is possible when the full dataset is available to train the DAPC.
+
+__Variable Loadings__  
+Which markers contribute to this structure and are they enriched for a particular annotation?
+
+The plot and table below shows variable loadings for LD1 (contribution to the first discriminant axis for each allele).
+```{r, warning=FALSE, message=FALSE}
+#get variable loadings
+marker_loadings1 <- loadingplot(dapc_int$var.contr, axis=1,thres=.007, lab.jitter=1, main = "loading plot for DA 1", )
+markers1 <- unique(substr(names(marker_loadings1$var.values),1,nchar(names(marker_loadings1$var.values))-2))
+
+#get marker annotations
+
+marker_mapping <- readxl::read_xlsx("metadata/final_mapping_results.xlsx", sheet = 1)
+
+marker_mapping %<>%
+  mutate(marker = str_replace(marker, "Omy(\\d+)", "Chr\\1")) %>% #marker name convention is different
+  mutate(marker = str_replace(marker, "\\.", "_")) %>% 
+  mutate(neutral = if_else(str_detect(`Presumed Type`, 'Adaptive|adaptive'), "adaptive", "neutral"))
+
+mls <- as.data.frame(marker_loadings1$var.values) %>%
+  rownames_to_column(var = "marker") %>%
+  mutate(marker = str_sub(marker, 0, nchar(marker) -2)) %>%
+  distinct(marker, .keep_all= TRUE) %>%
+  rename("loading_value" = "marker_loadings1$var.values") %>%
+  mutate(loading_value = loading_value*2) %>%
+  left_join(select(marker_mapping, marker, `Presumed Type`, chr, start)) %>%
+  arrange(desc(loading_value)) %>%
+  rename("Chromosome" = "chr", "Marker Position" = "start", "Annotation" = "Presumed Type", "Marker" = "marker", "Variable Loading" = "loading_value")
+kable(mls, caption = "Discriminant Axis 1 Loadings")
+
+#get variable loadings
+marker_loadings1 <- loadingplot(dapc_int$var.contr, axis=2,thres=.0065, lab.jitter=1, main = "loading plot for DA 2", )
+markers1 <- unique(substr(names(marker_loadings1$var.values),1,nchar(names(marker_loadings1$var.values))-2))
+
+#get marker annotations
+
+marker_mapping <- readxl::read_xlsx("metadata/final_mapping_results.xlsx", sheet = 1)
+
+marker_mapping %<>%
+  mutate(marker = str_replace(marker, "Omy(\\d+)", "Chr\\1")) %>% #marker name convention is different
+  mutate(marker = str_replace(marker, "\\.", "_")) %>% 
+  mutate(neutral = if_else(str_detect(`Presumed Type`, 'Adaptive|adaptive'), "adaptive", "neutral"))
+
+mls <- as.data.frame(marker_loadings1$var.values) %>%
+  rownames_to_column(var = "marker") %>%
+  mutate(marker = str_sub(marker, 0, nchar(marker) -2)) %>%
+  distinct(marker, .keep_all= TRUE) %>%
+  rename("loading_value" = "marker_loadings1$var.values") %>%
+  mutate(loading_value = loading_value*2) %>%
+  left_join(select(marker_mapping, marker, `Presumed Type`, chr, start)) %>%
+  arrange(desc(loading_value)) %>%
+  rename("Chromosome" = "chr", "Marker Position" = "start", "Annotation" = "Presumed Type", "Marker" = "marker", "Variable Loading" = "loading_value")
+kable(mls, caption = "Discriminant Axis 2 Loadings")
+```
+
+These marker loading results suggests the potential differences among the four groups are driven by 18 markers that collectively explain 33% of the variation along the first discriminant axis and 17 markers that collectively explain 33% of the variation along the second axis.
+
+Markers with neutral and adaptive annotations drive both axes.
 
 # Genetic Differentiation 
 
+## North vs South Fork
 Next we will estimate the level of genetic differentiation between North and South Fork samples using F~ST~.
 
 Let's calculate some basic F-statistics
@@ -289,10 +441,33 @@ genet.dist(fstat, method="WC84")
 
 The estimated F~ST~ between North and South Fork samples is very small at 0.0057. 
 
+## Full Interaction
+Next we will estimate the level of genetic differentiation between all four groups using F~ST~.
+
+Let's calculate some basic F-statistics
+```{r}
+fstat <- genind2hierfstat(genind_int)
+colnames(fstat) <- c(pop, names(genind_int$loc.n.all))
+
+basicstats <- basic.stats(fstat)
+kable(basicstats$overall, caption = "Basic F-statistics of Dataset")
+```
+
+For F~ST~ let's also estimate using the Weir and Cockerham method.
+```{r}
+genet.dist(fstat, method="WC84")
+```
+
+__The estimated maximum F~ST~ between any pair of samples is small at 0.016 and dataset wide F~ST~ is 0.0083__ The maximum pairwise F~ST~ is observed between wild and hatchery North Fork samples. However, all comparisons that include the North Fork Hatchery sample are of similar magnitude and larger than other comparisons, corroborating the results from DAPC that this stock is the most different from any other.
+
+The lowest pairwise F~ST~ is between wild North and South Fork samples.
+
+
 # Run-Timing Markers
 
-Given the low overall F~ST~, absence of structure in the dataset and the observation that highly discriminatory markers do not include run-timing markers, it is unlikely that there is any interesting pattern at the markers in the data. Let's check just to make sure.
+We are always particularly interested in the patterns of diversity within genomic regions that have major impacts on ecologically relevant traits. Let's examine the GREB1L/ROCK1 region associated with migration timing.
 
+__Allele Freqs__  
 Below we make a heatmap of allele frequencies. Markers are arranged in genomic order.
 ```{r, message=FALSE, warning=FALSE}
 run_timing_loci_names <- marker_mapping %>%
@@ -304,21 +479,21 @@ run_timing_loci_names <- marker_mapping %>%
 run_timing_loci_names <- str_replace(run_timing_loci_names$marker, "Omy28", "Chr28")
 
 #
-all_counts <- allele.dist(genind_2.0, mk.figures = FALSE)$count
+all_counts <- allele.dist(genind_int, mk.figures = FALSE)$count
 
 #make into a dataframe
 all_counts <- as.data.frame(do.call(rbind, all_counts))
-colnames(all_counts) <- c("NF_count", "SF_count")
+colnames(all_counts) <- c("NF_Hatchery_count","NF_Wild_count", "SF_Hatchery_count", "SF_Wild_Count")
 all_counts$sum <- rowSums(all_counts, na.rm = TRUE)
 
-all_freqs <- allele.dist(genind_2.0, mk.figures = FALSE)$frequency
+all_freqs <- allele.dist(genind_int, mk.figures = FALSE)$frequency
 #make into a dataframe
 all_freqs <- as.data.frame(do.call(rbind, all_freqs))
 
 all_freqs <- as.data.frame(cbind(all_freqs, all_counts))
 
 ##### get only minor allele
-all_freqs$marker <- genind_2.0$loc.fac
+all_freqs$marker <- genind_int$loc.fac
 
 #now group by marker and keep the minor allele, then convert counts to 
 all_maf <- all_freqs %>%
@@ -332,21 +507,22 @@ run_timing_maf <- all_maf %>%
   arrange(CRITFC_SNP_pos_genome, .keep_all=TRUE)
 
 #manually enter the position for one of these
-run_timing_maf[13,7] <- "11702210"
+run_timing_maf[12,11] <- "11702210"
 run_timing_maf %<>%
   arrange(CRITFC_SNP_pos_genome, .keep_all=TRUE)
 
 #definition of minor allele frequency broke for fixed marker, let's reset to 0
 run_timing_maf[6,1:5] <- list(0,0,0,0,0)
 
-tmat <- t(as.matrix(run_timing_maf[,1:2]))
+tmat <- t(as.matrix(run_timing_maf[,1:4]))
 colnames(tmat) <- run_timing_maf$marker
 pheatmap::pheatmap(tmat, show_colnames  = T, cluster_cols = FALSE, main = "Minor Allele Frequency of Run-Timing Markers", cluster_rows = FALSE)
 
 ```
 
-Only very subtle differences in allele frequency between North and South Fork steelhead samples at run timing markers.
+Generally, only  subtle differences in allele frequency between North and South Fork steelhead samples at run timing markers. Interestingly, GREB1_05 demonstrates higher heterozygosity in BOTH hatchery stocks. We will discuss potential implications later.
 
+__Individual Genotypes__  
 Sometimes it is useful to look at patterns among individuals instead of allele frequency. 
 
 Below we plot the genotypes of all samples at run-timing markers. Markers are arranged in genomic order. Rows (individuals) are hierarchically clustered within each population. Allele is displayed by color (overall minor allele homozygote = BLUE, heterozygote = yellow, major allele homozygote = red)
@@ -357,8 +533,8 @@ Below we plot the genotypes of all samples at run-timing markers. Markers are ar
 
 sep_genind28 <- seppop(genind_2.0[loc=run_timing_loci_names])
 
-polarized_allele_counts <- as.data.frame(sep_genind28$NFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22,24)]) %>%
-  bind_rows(as.data.frame(sep_genind28$SFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22,24)]))
+polarized_allele_counts <- as.data.frame(sep_genind28$NFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)]) %>%
+  bind_rows(as.data.frame(sep_genind28$SFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)]))
 
 colnames(polarized_allele_counts) <- str_sub(colnames(polarized_allele_counts), 1, nchar(colnames(polarized_allele_counts))-2)
 
@@ -372,18 +548,55 @@ pac_nf <- polarized_allele_counts %>%
   filter(pop == "NFCQ")
 pac_sf <- polarized_allele_counts %>%
   filter(pop == "SFCQ")
-nf_heat <- pheatmap::pheatmap(pac_nf[,-c(14,15)], cluster_cols  = FALSE, show_rownames = FALSE, main = "North Fork Major Allele Count")
-sf_heat <- pheatmap::pheatmap(pac_sf[,-c(14,15)], cluster_cols  = FALSE, show_rownames = FALSE, main = "South Fork Major Allele Count")
+nf_heat <- pheatmap::pheatmap(pac_nf[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "North Fork Major Allele Count")
+sf_heat <- pheatmap::pheatmap(pac_sf[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "South Fork Major Allele Count")
 
 
 
 ```
 
+```{r, warning=FALSE, message=FALSE}
+#use this to set minor allele
+#colSums(genind_2.0[loc=run_timing_loci_names]$tab, na.rm = TRUE)
 
-At run timing markers there appear to be two major clusters. These clusters were driven by the first three SNPs in the genomic region (Chr28_11607954, Omy_RAD52456-17 and Omy_GREB1_05). While all SNPs annotated as run-timing marker SNPs have demonstrated an association with this phenotype in some populations, in the nearby Rogue River, we have demonstrated that two of these SNPs are not diagnostic of run timing. The third (Omy_RAD52456-17) was not analyzed in that study. This suggests that genomic variation within our North and South Fork Coquille steelhead samples between these two clusters is unlikely to have a large phenotype effect. Similarly, there is high genetic diversity (heterozygosity) at a marker at the 3' border of this region (Chr28_11773194), but this marker is not diagnostic of run timing in the Rogue River. 
+sep_genind28 <- seppop(genind_int[loc=run_timing_loci_names])
 
-Ignoring the first three and last marker, we also observed some genetic variation at other markers known to have a strong association with run-timing in the nearby Rogue River. Some individuals demonstrate a large number of minor alleles compared to our expectations given that all individuals are winter run.  
-In both the NF and SF Coquille, a few individuals were heterozygous at many adult run timing markers. This result suggests that these individuals have one copy of the “early” run allele. In the NF Coquille, two individuals were homozygous at one run timing marker suggesting that they have two copies of the “early” run allele. While we can not predict the phenotypic effect of this variation, it suggests Coquille winter run steelhead harbor some early-migration associated alleles.
+polarized_allele_counts <- as.data.frame(sep_genind28$Hatchery.NFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)]) %>%
+  bind_rows(as.data.frame(sep_genind28$Wild.NFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)])) %>%
+  bind_rows(as.data.frame(sep_genind28$Hatchery.SFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)])) %>%
+  bind_rows(as.data.frame(sep_genind28$Wild.SFCQ$tab[,c(1,3,5,7,9,11,13,15,17,19,20,22)]))
+
+colnames(polarized_allele_counts) <- str_sub(colnames(polarized_allele_counts), 1, nchar(colnames(polarized_allele_counts))-2)
+
+polarized_allele_counts %<>%
+  rownames_to_column(var = "sample") %>%
+  left_join(select(pops, sample, int)) %>%
+  relocate(run_timing_maf$marker) #reorder to reflect genome order
+  
+
+pac_Hatchery.NFCQ <- polarized_allele_counts %>%
+  filter(int == "Hatchery.NFCQ")
+pac_Wild.NFCQ <- polarized_allele_counts %>%
+  filter(int == "Wild.NFCQ")
+
+pac_Hatchery.SFCQ <- polarized_allele_counts %>%
+  filter(int == "Hatchery.SFCQ")
+pac_Wild.SFCQ <- polarized_allele_counts %>%
+  filter(int == "Wild.SFCQ")
+
+nfH_heat <- pheatmap::pheatmap(pac_Hatchery.NFCQ[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "North Fork Hatchery Major Allele Count")
+nfW_heat <- pheatmap::pheatmap(pac_Wild.NFCQ[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "North Fork Wild Major Allele Count")
+sfH_heat <- pheatmap::pheatmap(pac_Hatchery.SFCQ[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "South Fork Hatchery Major Allele Count")
+sfW_heat <- pheatmap::pheatmap(pac_Wild.SFCQ[,-c(13,14)], cluster_cols  = FALSE, show_rownames = FALSE, main = "South Fork Wild Major Allele Count")
+
+
+
+```
+
+Regardless of how the data is structured, at run timing markers there appear to be two major clusters. These clusters were driven by the first three SNPs in the genomic region (Chr28_11607954, Omy_RAD52456-17 and Omy_GREB1_05). While all SNPs annotated as run-timing marker SNPs have demonstrated an association with this phenotype in some populations, in the nearby Rogue River, we have demonstrated that two of these SNPs are not diagnostic of run timing. The third (Omy_RAD52456-17) was not analyzed in that study. This suggests that genomic variation that generates these two clusters is unlikely to have a large phenotype effect. Similarly, there is high genetic diversity (heterozygosity) at a marker at the 3' border of this region (Chr28_11773194), but this marker is not diagnostic of run timing in the Rogue River. This also suggests that the run timing marker with large differences in allele frequency between hatchery and wild stocks Omy_GREB1_05 is unlikely to have a major phenotypic impact. 
+
+Ignoring the first three and last marker, we also observed some genetic variation at other markers known to have a strong association with run-timing in the nearby Rogue River. _Some individuals demonstrate a large number of minor alleles compared to our expectations given that all individuals demonstrate winter phenotypes. _ 
+In both the NF and SF Coquille, a few individuals were heterozygous at many adult run timing markers. This result suggests that these individuals have one copy of the “early” run allele. In the NF Coquille, one individual was homozygous at one run timing marker suggesting that this individual has two copies of the “early” run allele. While we can not predict the phenotypic effect of this variation, it suggests Coquille winter run steelhead harbor some early-migration associated genetic variants. 
 
 Below we gather the metadata for individuals with many copies of proposed "early" alleles.
 ```{r}
@@ -396,7 +609,7 @@ min_allele <- pac_nf %>%
   rowwise(sample) %>%
   mutate(min_allele_ct = sum(c_across(cols = everything())=="1", na.rm = TRUE) + 2*sum(c_across(cols = everything())=="0", na.rm = TRUE)) %>%
   select(sample, min_allele_ct) %>%
-  filter(min_allele_ct > 3) %>%
+  filter(min_allele_ct >= 3) %>%
   left_join(meta_data, by = c("sample" = "SFGL Id"))
 
 #ggplot(data = min_allele)+geom_histogram(aes(x = min_allele_ct))
@@ -409,9 +622,16 @@ kable(min_allele, caption = "metadata from samples with more than 3 minor allele
 # Summary
 
 __Differentiation__
-We examined genetic variation at 348 genetic markers among 34 North Fork and 37 South Fork Coquille River Steelhead. Overall F~ST~ was very low and PCA did not reveal any clear structure to the data. Using a discriminant analysis of principal components, we observed very subtle structure driven by a mix of neutral and putatively adaptive markers. The genetic structure observed at these markers was insufficient to fully discriminate between the two groups, however cross validation suggests that individuals could be successful assigned to their source population using genetic information with 79% accuracy.  
-These results suggest there are no strong genetic differences between our North and South Fork samples. However, our GTseq panel only provides a small snapshot of the genetic variation within and among these groups and other potentially ecologically relevant genetic differences between these groups may exist. 
+We examined genetic variation at 347 genetic markers among 34 North Fork and 37 South Fork Coquille River Steelhead. Overall F~ST~ was low (0.0083), maximum pairwise F~ST~ was ~0.016, and PCA did not reveal any clear structure to the data. Using a discriminant analysis of principal components to discriminate betweenNorth or South Fork samples ignoring hatchery/wild status, we observed subtle structure driven by a mix of neutral and putatively adaptive markers. The genetic structure observed at these markers was insufficient to fully discriminate between the groups, however cross validation suggests that individuals could be successfully assigned to their source population using genetic information with 76% accuracy.
+
+Using DAPC to discriminate among all four possible groupings (North Fork Hatchery, North Fork Wild, South Fork Hatchery, South Fork Wild), we were able to describe an axis of genetic variation that strongly discriminated between North Fork Hatchery stocks and all others, and additional axes that revealed subtler structure. Cross validation of this DAPC demonstrated that we could assign individuals back to their source group with 61% success, substantially greater than expected by chance alone (25%). Small sample size, particularly in our sample of the North Fork hatchery stock, may have led to high variance in our some of our estimates, however, our cross validation result should be robust to this effects.
+
+These results suggest there are no _strong_ genetic differences between our North and South Fork samples, or between hatchery stocks and wild populations within and across both forks, but subtle structure in the data (overall F~ST~ of 0.083) was sufficient to discriminate between North Fork Coquille hatchery stock individuals and all others. 
+
+Importantly, our GTseq panel only provides a small snapshot of the genetic variation within and among these groups and other potentially ecologically relevant genetic differences between these groups may exist. Also sample size 
 
 __Run timing markers__
 There was limited variation among run-timing associated markers within or between our samples. Four markers showed higher genetic diversity than the others. These markers flank the genomic region associated with run-timing and three of the four have been observed to have low correlation with run-timing phenotypes in the nearby Rogue River.  
-We also observed some genetic variation at other markers in the genomic region known to have an association with run-timing in the nearby Rogue River. A small number individuals carry many minor alleles compared to our expectations given that all individuals are winter run. This suggests early-run alleles may be found among Coquille River winter steelhead, but the phenotypic impact of these alleles is not known. 
+We also observed some genetic variation at other markers in the genomic region known to have an association with run-timing in the nearby Rogue River. A small number individuals carry many minor, early-migration associated alleles compared to our expectations given that all individuals demonstrate late-migration phenotypes. This suggests early-run alleles may be found among Coquille River winter steelhead, but the phenotypic impact of these alleles is not known. 
+
+

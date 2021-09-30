@@ -126,7 +126,7 @@ gunzip -c $INFILE > ${INFILE%.gz}
 
 #$ -t 1-96
 
-#$ -tc 32
+#$ -tc 96
 
 #$ -N GTseq-genotyperv3
 
@@ -143,7 +143,7 @@ OUTFILE=$(basename ${INFILE%.fastq}.genos)
 
 GTSEQ_GENO="/dfs/Omalley_Lab/dayan/software/GTseq-Pipeline/GTseq_Genotyper_v3.1.pl" #again, change this path to your own copy of this script
 
-PROBE_SEQS="/dfs/Omalley_Lab/dayan/software/GTseq-Pipeline/Omy_GTseq390_ProbeSeqs.csv" #change the probe seq file to match whatever panel you are using
+PROBE_SEQS="/dfs/Omalley_Lab/dayan/software/GTseq-Pipeline/Omy_390_probe_seqs.csv" #change the probe seq file to match whatever panel you are using
 
 perl $GTSEQ_GENO $PROBE_SEQS $INFILE > $OUTFILE
 
@@ -215,9 +215,43 @@ marker_info %<>%
   mutate(a1_count =  as.numeric(substr(a1_count, 3, nchar(a1_count)))) %>%
   mutate(a2_count =  as.numeric(substr(a2_count, 3, nchar(a2_count)))) %>%
   mutate(ind = str_remove(ind, "^\\./")) %>%
-  mutate(ind = str_remove(ind, "\\.genos"))
+  mutate(ind = str_remove(ind, "\\.genos")) %>%
+  filter(!(is.na(marker)))
 
 
+```
+
+
+```{r, eval = FALSE}
+fivefour <- filter(marker_info, marker =="Omy_RAD47080-54")
+five3 <- filter(marker_info, marker =="Omy_RAD15709-53")
+
+fivefour %<>% 
+  mutate(a1_count = case_when(a1_count == 0 ~ 1,
+                              TRUE ~ a1_count)) %>%
+  mutate(a2_count = case_when(a2_count == 0 ~ 1,
+                               TRUE ~ a2_count)) %>%
+  mutate(allele_ratio_54 = a1_count/a2_count) %>%
+  rename(called_geno_54 = called_geno)
+
+
+five3 %<>% 
+  mutate(a1_count = case_when(a1_count == 0 ~ 1,
+                               TRUE ~ a1_count)) %>%
+  mutate(a2_count = case_when(a2_count == 0 ~ 1,
+                               TRUE ~ a2_count)) %>%
+  mutate(allele_ratio_53 = a2_count/a1_count) %>%#different strands so flip the ratios around
+  rename(called_geno_53 = called_geno)
+  
+comp <- select(fivefour, ind, allele_ratio_54, called_geno_54) %>%
+  left_join(select(five3, ind, allele_ratio_53, called_geno_53)) %>% #switch the called geno around for one of these because the probe seq is different strand 
+  mutate(called_geno_54 = case_when(called_geno_54 == "A1HOM" ~ "A2HOM",
+                                    called_geno_54 == "A2HOM" ~ "A1HOM",
+                                    TRUE ~ called_geno_54)) %>%
+  mutate(agree = called_geno_54 == called_geno_53)
+
+ggplot(data = comp)+geom_point(aes(log(allele_ratio_54), log(allele_ratio_53), color = agree))+theme_classic()+geom_abline(aes(slope =1, intercept = 0))
+  
 ```
 
 
@@ -401,7 +435,7 @@ kable(sex_marker_info %>%
 
 ```
 
-In the example data, this correction looks like it worked: Called males follow a 1:1 line and there are very few uncalled sex genotypes, except for samples with very low total on-target reads. Also the overall sex ratio of this sample is closer to our a priori expectations.
+This correction looks like it worked: Called males follow a 1:1 line and there are very few uncalled sex genotypes, except for samples with very low total on-target reads. Also the overall sex ratio of this sample is closer to our a priori expectations.
 
 Finally let's correct the sex genotypes in the data.
 
@@ -697,7 +731,7 @@ plots$plots[[paralog_possible[10]]] #manually looped through these plots by chan
 
 ```
 
-"Omy_RAD103359-45" , "Omy_128693-455", "Omy_CRBF1-1", "Omy_RAD103359-45", "Omy_RAD29352-6", "Omy_RAD74691-49"
+
 Removed 6 bad markers
 ```{r}
 # Local R
@@ -726,6 +760,7 @@ Removed 30 monomorphic
 #note this is here to make the example script run without doing the relatedness calculations, if you find this (how did you do that? you should be looking at the rendered webpage, not the raw html...) don't run it
 genos_2.0 <- genos_1.0
 ```
+
 
 
 ## File Conversion and Stats
@@ -768,7 +803,7 @@ marker_info %>%
 
 ### Final Dataset
 
-The final dataset is composed of 71 individuals genotyped at 348 markers. 
+The final dataset is composed of 71 individuals genotyped at 347 markers. 
 
 ### Conversion
 
